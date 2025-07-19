@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Sign Language Converter</title>
+    <link rel="stylesheet" href="asep.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Text to Sign Language Converter</h1>
+        <p>Convert your speech or text into sign language videos!</p>
+        
+        <div class="input-section">
+            <h2>Choose Input Method</h2>
+            <button id="speechButton">Real-time Speech</button>
+            <button id="textButton">Type Input</button>
+        </div>
+
+        <div id="textInput" class="hidden">
+            <h2>Type Your Input</h2>
+            <input type="text" id="userInput" placeholder="Enter your text here">
+            <button id="submitText">Submit</button>
+        </div>
+
+        <div id="output" class="hidden">
+            <h2>Output Video</h2>
+            <video id="outputVideo" controls></video>
+        </div>
+    </div>
+
+    <script src="asep.js"></script>
+</body>
+</html>
