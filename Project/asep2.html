@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Sign Language Translator</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+    background-color: #f4f4f9;
+    background: linear-gradient(135deg, #74ebd5, #acb6e5); /* Gradient Background */
+}
+
+h1 {
+    color: #333;
+}
+
+#input-section {
+    margin-bottom: 20px;
+}
+
+#input-text {
+    padding: 10px;
+    font-size: 16px;
+    width: 200px;
+    margin-right: 10px;
+}
+
+#translate-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#translate-btn:hover {
+    background-color: #0056b3;
+}
+
+#video-section {
+    margin-top: 20px;
+}
+
+video {
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+h1 {
+    color: #222;
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+#input-section {
+    margin-bottom: 20px;
+}
+
+#input-text {
+    padding: 10px;
+    font-size: 16px;
+    width: 250px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#translate-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#translate-btn:hover {
+    background-color: #0056b3;
+}
+
+#video-section {
+    margin-top: 20px;
+}
+
+video {
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    width: 50%;
+    max-height: 800px;
+    display: block;
+    margin: 0 auto;
+}
+
+    .play-pause-container {
+        margin-top: 10px;
+    }
+
+    #play-btn, #pause-btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        margin: 5px;
+    }
+
+    #play-btn:hover {
+        background-color: #218838;
+    }
+
+    #pause-btn {
+        background-color: #dc3545;
+    }
+
+    #pause-btn:hover {
+        background-color: #c82333;
+    }
+
+
+    </style>
+</head>
+<body>
+    <h1>Text to Sign Language Translator</h1>
+
+<div id="input-section">
+    <label for="input-text">Enter Text:</label>
+    <input type="text" id="input-text" placeholder="Type here..." />
+    <button id="translate-btn">Translate</button>
+</div>
+
+<div id="video-section">
+    <h2>Translation:</h2>
+    <div id="video-container"></div>
+    <div class="play-pause-container">
+        <button id="play-btn">Play</button>
+        <button id="pause-btn">Pause</button>
+    </div>
+</div>
+
+
+
+    <script>
+      document.getElementById('translate-btn').addEventListener('click', async function () {
+    const inputText = document.getElementById('input-text').value.toUpperCase(); // Get user input
+    const videoContainer = document.getElementById('video-container'); // Container for displaying the final video
+    videoContainer.innerHTML = ''; // Clear any previous video output
+
+    if (!inputText) {
+        alert('Please enter some text!');
+        return;
+    }
+
+    const words = inputText.split(' '); // Split input into words
+    const videoPaths = []; // Array to hold the paths of videos to combine
+
+    for (const word of words) {
+        const wordVideoPath = `http://127.0.0.1:5000/download_video/${word}`;
+        if (await videoExists(wordVideoPath)) {
+            videoPaths.push(wordVideoPath);
+        } else if (!isNaN(word)) {
+            // If the word is a number, check for videos of individual digits
+            for (const digit of word) {
+                const numberVideoPath = `http://127.0.0.1:5000/download_video/${digit}`;
+                if (await videoExists(numberVideoPath)) {
+                    videoPaths.push(numberVideoPath);
+                } else {
+                    console.error(`Video for number "${digit}" not found.`);
+                }
+            }
+        } else {
+            // If word video is not found, fallback to letter videos
+            for (const letter of word) {
+                const letterVideoPath = `http://127.0.0.1:5000/download_video/${letter}`;
+                if (await videoExists(letterVideoPath)) {
+                    videoPaths.push(letterVideoPath);
+                } else {
+                    console.error(`Video for letter "${letter}" not found.`);
+                }
+            }
+        }
+    }
+    
+
+    if (videoPaths.length === 0) {
+        alert('No videos found for the entered text!');
+        return;
+    }
+
+    // Combine videos into one
+    const combinedVideo = await createCombinedVideo(videoPaths);
+    videoContainer.appendChild(combinedVideo); // Display the final combined video
+});
+
+/**
+ * Checks if a video file exists by sending a HEAD request.
+ * @param {string} url - The URL to the video file.
+ * @returns {Promise<boolean>} True if the file exists, false otherwise.
+ */
+async function videoExists(url) {
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+    } catch (err) {
+        console.error(`Error checking video existence: ${url}`, err);
+        return false;
+    }
+}
+
+/**
+ * Creates a single video combining all input video paths.
+ * @param {string[]} videoPaths - Array of video paths to combine.
+ * @returns {Promise<HTMLVideoElement>} The combined video element.
+ */
+async function createCombinedVideo(videoPaths) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const outputVideo = document.createElement('video');
+    const tempVideos = videoPaths.map(createVideoElement); // Create video elements
+
+    // Wait for the first video to load to set canvas dimensions
+    const firstVideo = tempVideos[0];
+    await loadVideo(firstVideo);
+    canvas.width = firstVideo.videoWidth;
+    canvas.height = firstVideo.videoHeight;
+
+    // Create a MediaRecorder to capture canvas output
+    const stream = canvas.captureStream();
+    const mediaRecorder = new MediaRecorder(stream);
+    const chunks = [];
+
+    mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/mp4' });
+        outputVideo.src = URL.createObjectURL(blob);
+        outputVideo.controls = true; // Add playback controls
+        outputVideo.autoplay = true; // Autoplay video
+       /*  outputVideo.style.width = '100%'; */
+       outputVideo.style.width = '50%'; // Adjust width to 50% of the container
+outputVideo.style.height = 'auto'; // Maintain aspect ratio
+outputVideo.style.maxHeight = '800px'; // Limit the maximum height
+outputVideo.style.margin = '0 auto'; // Center the video horizontally
+outputVideo.style.display = 'block'; // Ensure proper centering
+outputVideo.style.border = '2px solid #ccc'; // Optional: Add a border for better visibility
+outputVideo.style.borderRadius = '8px'; // Optional: Add rounded corners
+
+    };
+
+    mediaRecorder.start();
+
+    // Play each video and draw it onto the canvas
+    for (const video of tempVideos) {
+        await playVideoOnCanvas(video, canvas, ctx);
+    }
+
+    mediaRecorder.stop();
+    return outputVideo;
+}
+
+/**
+ * Creates a video element for a given path.
+ * @param {string} src - The video path.
+ * @returns {HTMLVideoElement} The video element.
+ */
+function createVideoElement(src) {
+    const video = document.createElement('video');
+    video.src = src;
+    video.crossOrigin = 'anonymous'; // Avoid CORS issues
+    video.muted = true;
+    return video;
+}
+
+/**
+ * Loads a video and waits for it to be ready.
+ * @param {HTMLVideoElement} video - The video element.
+ * @returns {Promise<void>} Resolves when the video is loaded.
+ */
+function loadVideo(video) {
+    return new Promise((resolve) => {
+        video.onloadeddata = () => resolve();
+        video.load();
+    });
+}
+
+/**
+ * Plays a video on a canvas and waits for it to finish.
+ * @param {HTMLVideoElement} video - The video element.
+ * @param {HTMLCanvasElement} canvas - The canvas element.
+ * @param {CanvasRenderingContext2D} ctx - The canvas context.
+ * @returns {Promise<void>} Resolves when the video finishes playing.
+ */
+function playVideoOnCanvas(video, canvas, ctx) {
+    return new Promise((resolve) => {
+        video.onplay = () => {
+            function drawFrame() {
+                if (!video.paused && !video.ended) {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    requestAnimationFrame(drawFrame);
+                }
+            }
+            requestAnimationFrame(drawFrame);
+        };
+        video.onended = () => resolve();
+        video.play();
+    });
+}
+document.getElementById('play-btn').addEventListener('click', function () {
+        const video = document.querySelector('#video-container video');
+        if (video) video.play();
+    });
+
+    document.getElementById('pause-btn').addEventListener('click', function () {
+        const video = document.querySelector('#video-container video');
+        if (video) video.pause();
+    });
+
+    </script>
+</body>
+</html>
