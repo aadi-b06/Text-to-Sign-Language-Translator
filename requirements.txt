@@ -1,0 +1,12 @@
+# Fill in exact versions by running: pip freeze > requirements.txt
+# (after activating your project's venv, with only the needed packages installed)
+#
+# Below is a starter template based on common libraries for this kind of
+# CNN-based gesture recognition + video pipeline project. Remove anything
+# you didn't actually use, and add anything missing.
+
+opencv-python
+numpy
+tensorflow        # or torch, depending on what you used to train the CNN
+scikit-learn
+flask             # if asep.html is served via a Python backend; remove if it's static
